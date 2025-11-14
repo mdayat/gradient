@@ -20,6 +20,7 @@ export default async function handler(
     .safeParse(req.body);
 
   if (result.success === false) {
+    console.error(new Error(result.error.message));
     return res.status(StatusCodes.BAD_REQUEST).send(ReasonPhrases.BAD_REQUEST);
   }
 
@@ -41,7 +42,7 @@ export default async function handler(
       console.error(new Error("email already registered", { cause: error }));
       res.status(StatusCodes.CONFLICT).send(ReasonPhrases.CONFLICT);
     } else {
-      console.error(new Error("failed to create user", { cause: error }));
+      console.error(new Error("failed to sign-up", { cause: error }));
       res
         .status(StatusCodes.INTERNAL_SERVER_ERROR)
         .send(ReasonPhrases.INTERNAL_SERVER_ERROR);
