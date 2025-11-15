@@ -4,7 +4,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "../ui/button";
+import { Button } from "./ui/button";
 import { MoreHorizontalIcon } from "lucide-react";
 import { useState } from "react";
 import {
@@ -14,15 +14,15 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../ui/dialog";
+} from "./ui/dialog";
 import Link from "next/link";
 import { QuizColumnDef } from "@/pages";
 
-interface TableActionProps {
+interface QuizTableActionProps {
   quiz: QuizColumnDef;
 }
 
-function TableAction({ quiz }: TableActionProps) {
+function QuizTableAction({ quiz }: QuizTableActionProps) {
   const [isDropdownOpened, setIsDropdownOpened] = useState(false);
   const [isStartDialogOpened, setIsStartDialogOpened] = useState(false);
 
@@ -74,4 +74,4 @@ function TableAction({ quiz }: TableActionProps) {
   );
 }
 
-export { TableAction };
+export { QuizTableAction };

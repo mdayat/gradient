@@ -1,5 +1,5 @@
 import { Layout } from "@/components/Layout";
-import { TableAction } from "@/components/quiz/TableAction";
+import { QuizTableAction } from "@/components/QuizTableAction";
 import { DataTable } from "@/components/ui/data-table";
 import { LoadingIndicator } from "@/components/ui/loading-indicator";
 import { GetQuizzes } from "@/dtos/quiz";
@@ -44,7 +44,7 @@ const columns: ColumnDef<QuizColumnDef>[] = [
     id: "actions",
     header: "Actions",
     cell: ({ row }) => {
-      return <TableAction quiz={row.original} />;
+      return <QuizTableAction quiz={row.original} />;
     },
   },
 ];
