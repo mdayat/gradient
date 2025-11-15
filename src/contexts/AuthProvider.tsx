@@ -8,6 +8,7 @@ import {
   type Dispatch,
   type PropsWithChildren,
   type SetStateAction,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -16,8 +17,10 @@ import {
 import { toast } from "sonner";
 
 interface AuthContextType {
+  isLoading: boolean;
   user: User | null;
   setUser: Dispatch<SetStateAction<User | null>>;
+  logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -53,9 +56,32 @@ function AuthProvider({ children }: PropsWithChildren) {
     })();
   }, []);
 
+  const logout = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const res = await axios.post("/api/auth/sign-out");
+      if (res.status === 204) {
+        setUser(null);
+      } else {
+        throw new Error(`unknown status code ${res.status}`);
+      }
+    } catch (error) {
+      handleAxiosError(error, (res) => {
+        if (!res || res.status >= 500) {
+          console.error(new Error("failed to sign-out", { cause: error }));
+          toast.error("Couldn't sign-out, please try again", {
+            richColors: true,
+          });
+        }
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   const value = useMemo((): AuthContextType => {
-    return { user, setUser };
-  }, [user]);
+    return { isLoading, user, setUser, logout };
+  }, [isLoading, logout, user]);
 
   if (isLoading) {
     return (
