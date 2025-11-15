@@ -1,3 +1,4 @@
+import { TableAction } from "@/components/quiz/TableAction";
 import { DataTable } from "@/components/ui/data-table";
 import { LoadingIndicator } from "@/components/ui/loading-indicator";
 import { GetQuizzes } from "@/dtos/quiz";
@@ -38,9 +39,16 @@ const columns: ColumnDef<QuizColumnDef>[] = [
       return parts.join(" ");
     },
   },
+  {
+    id: "actions",
+    header: "Actions",
+    cell: ({ row }) => {
+      return <TableAction quiz={row.original} />;
+    },
+  },
 ];
 
-export default function Home() {
+function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [quizzes, setQuizzes] = useState<GetQuizzes>([]);
 
@@ -93,3 +101,6 @@ export default function Home() {
     </div>
   );
 }
+
+export default Home;
+export type { QuizColumnDef };

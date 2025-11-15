@@ -25,7 +25,7 @@ export default async function handler(
 
   try {
     const user = await prisma.user.findUnique({
-      select: { id: true, email: true, created_at: true },
+      select: { id: true, email: true },
       where: { email: result.data.email, password: result.data.password },
     });
 
@@ -39,11 +39,7 @@ export default async function handler(
       `user_id=${user.id}; Max-Age=${oneMonthInSec}; Path=/api; SameSite=Strict; HttpOnly; Secure;`
     );
 
-    res.status(StatusCodes.OK).json({
-      id: user.id,
-      email: user.email,
-      created_at: user.created_at.toISOString(),
-    });
+    res.status(StatusCodes.OK).json(user);
   } catch (error) {
     console.error(new Error("failed to sign-in", { cause: error }));
     res

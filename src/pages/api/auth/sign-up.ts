@@ -28,12 +28,7 @@ export default async function handler(
     const user = await prisma.user.create({
       data: { email: result.data.email, password: result.data.password },
     });
-
-    res.status(StatusCodes.CREATED).json({
-      id: user.id,
-      email: user.email,
-      created_at: user.created_at.toISOString(),
-    });
+    res.status(StatusCodes.CREATED).json(user);
   } catch (error) {
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&

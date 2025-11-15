@@ -29,7 +29,6 @@ export default async function handler(
         name: quiz.name,
         duration_in_sec: quiz.duration_in_sec,
         question_count: quiz._count.questions,
-        created_at: quiz.created_at.toISOString(),
       }))
     );
   } catch (error) {

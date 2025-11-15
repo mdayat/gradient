@@ -21,12 +21,13 @@ export default async function handler(
       "Set-Cookie",
       "user_id=; Max-Age=0; Path=/api; SameSite=Strict; HttpOnly; Secure;"
     );
+    console.error(new Error(result.error.message));
     return res.status(StatusCodes.NOT_FOUND).send(ReasonPhrases.NOT_FOUND);
   }
 
   try {
     const user = await prisma.user.findUnique({
-      select: { id: true, email: true, created_at: true },
+      select: { id: true, email: true },
       where: { id: userId },
     });
 
@@ -38,11 +39,7 @@ export default async function handler(
       return res.status(StatusCodes.NOT_FOUND).send(ReasonPhrases.NOT_FOUND);
     }
 
-    res.status(StatusCodes.OK).json({
-      id: user.id,
-      email: user.email,
-      created_at: user.created_at.toISOString(),
-    });
+    res.status(StatusCodes.OK).json(user);
   } catch (error) {
     console.error(new Error("failed to get user", { cause: error }));
     res
