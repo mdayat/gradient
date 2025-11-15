@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { ReasonPhrases, StatusCodes } from "http-status-codes";
-import { z } from "zod";
+import z from "zod";
 import { prisma } from "@/lib/prisma";
 import { User } from "@/dtos/user";
 
@@ -32,6 +32,12 @@ export default async function handler(
     if (user === null) {
       return res.status(StatusCodes.NOT_FOUND).send(ReasonPhrases.NOT_FOUND);
     }
+
+    const oneMonthInSec = 60 * 60 * 24 * 30;
+    res.setHeader(
+      "Set-Cookie",
+      `user_id=${user.id}; Max-Age=${oneMonthInSec}; Path=/api; SameSite=Strict; HttpOnly; Secure;`
+    );
 
     res.status(StatusCodes.OK).json({
       id: user.id,

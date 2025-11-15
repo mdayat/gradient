@@ -2,7 +2,7 @@ import { User } from "@/dtos/user";
 import { prisma } from "@/lib/prisma";
 import { ReasonPhrases, StatusCodes } from "http-status-codes";
 import type { NextApiRequest, NextApiResponse } from "next";
-import { z } from "zod";
+import z from "zod";
 
 export default async function handler(
   req: NextApiRequest,
@@ -14,9 +14,13 @@ export default async function handler(
       .send(ReasonPhrases.METHOD_NOT_ALLOWED);
   }
 
-  const userId = (req.query.userId ?? "") as string;
+  const userId = req.cookies.user_id ?? "";
   const result = z.uuid().safeParse(userId);
   if (result.success === false) {
+    res.setHeader(
+      "Set-Cookie",
+      "user_id=; Max-Age=0; Path=/api; SameSite=Strict; HttpOnly; Secure;"
+    );
     return res.status(StatusCodes.NOT_FOUND).send(ReasonPhrases.NOT_FOUND);
   }
 
@@ -27,6 +31,10 @@ export default async function handler(
     });
 
     if (user === null) {
+      res.setHeader(
+        "Set-Cookie",
+        "user_id=; Max-Age=0; Path=/api; SameSite=Strict; HttpOnly; Secure;"
+      );
       return res.status(StatusCodes.NOT_FOUND).send(ReasonPhrases.NOT_FOUND);
     }
 

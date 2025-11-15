@@ -8,6 +8,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { useAuthContext } from "@/contexts/AuthProvider";
 import { User } from "@/dtos/user";
 import { handleAxiosError } from "@/lib/axios";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,7 +17,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { z } from "zod";
+import z from "zod";
 
 const signInSchema = z.object({
   email: z.email(),
@@ -27,6 +28,7 @@ type SignInFormValues = z.infer<typeof signInSchema>;
 
 export default function SignIn() {
   const [isLoading, setIsLoading] = useState(false);
+  const { setUser } = useAuthContext();
 
   const form = useForm<SignInFormValues>({
     resolver: zodResolver(signInSchema),
@@ -44,7 +46,7 @@ export default function SignIn() {
       });
 
       if (res.status === 200) {
-        toast.success("Successfully signed-in", { richColors: true });
+        setUser(res.data);
         form.reset();
       } else {
         throw new Error(`unknown status code ${res.status}`);
