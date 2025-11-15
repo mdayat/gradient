@@ -1,3 +1,4 @@
+import { Layout } from "@/components/Layout";
 import { TableAction } from "@/components/quiz/TableAction";
 import { DataTable } from "@/components/ui/data-table";
 import { LoadingIndicator } from "@/components/ui/loading-indicator";
@@ -5,7 +6,7 @@ import { GetQuizzes } from "@/dtos/quiz";
 import { handleAxiosError } from "@/lib/axios";
 import { ColumnDef } from "@tanstack/react-table";
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { ReactElement, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 type QuizColumnDef = Pick<
@@ -101,6 +102,10 @@ function Home() {
     </div>
   );
 }
+
+Home.getLayout = (page: ReactElement) => {
+  return <Layout>{page}</Layout>;
+};
 
 export default Home;
 export type { QuizColumnDef };

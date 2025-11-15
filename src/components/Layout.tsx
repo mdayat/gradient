@@ -45,10 +45,7 @@ function Layout({ children }: { children?: React.ReactNode }) {
           <SidebarMenu>
             {navigationItems.map((item) => (
               <SidebarMenuItem key={item.url}>
-                <SidebarMenuButton
-                  isActive={pathname.replace(/\/$/, "") === item.url}
-                  asChild
-                >
+                <SidebarMenuButton isActive={pathname === item.url} asChild>
                   <Link href={item.url}>
                     <item.icon />
                     <span>{item.title}</span>
