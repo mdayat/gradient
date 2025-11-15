@@ -5,8 +5,9 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider        = "prisma-client"
+  output          = "../generated/prisma"
+  previewFeatures = ["relationJoins"]
 }
 
 datasource db {
@@ -19,4 +20,37 @@ model user {
   email      String   @unique @db.VarChar(255)
   password   String   @db.VarChar(255)
   created_at DateTime @default(now()) @db.Timestamptz(6)
+}
+
+model quiz {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name            String   @db.VarChar(255)
+  duration_in_sec Int      @db.Integer
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+
+  questions quiz_question[]
+}
+
+model quiz_question {
+  quiz_id     String   @db.Uuid
+  question_id String   @db.Uuid
+  quiz        quiz     @relation(fields: [quiz_id], references: [id], onDelete: Cascade)
+  question    question @relation(fields: [question_id], references: [id], onDelete: Cascade)
+
+  @@id([quiz_id, question_id])
+}
+
+model question {
+  id         String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  content    String        @db.Text
+  solution   String        @db.Text
+  type       question_type
+  created_at DateTime      @default(now()) @db.Timestamptz(6)
+
+  quizzes quiz_question[]
+}
+
+enum question_type {
+  multiple_choice
+  multiple_answer
 }
