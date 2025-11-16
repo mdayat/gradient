@@ -4,7 +4,7 @@ import { GetQuiz } from "@/dtos/quiz";
 import { handleAxiosError } from "@/lib/axios";
 import axios from "axios";
 import { useRouter } from "next/router";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
   Sidebar,
@@ -27,6 +27,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { deltaToHTMLString } from "@/utils/delta";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+
+type QuestionId = string;
+type AnswerId = string;
+type UserResponse = Map<QuestionId, Set<AnswerId>>;
+
+function initUserResponse() {
+  return new Map<QuestionId, Set<AnswerId>>();
+}
 
 export default function Quiz() {
   const [isNotFound, setIsNotFound] = useState(false);
@@ -37,10 +49,48 @@ export default function Quiz() {
   const [questionIdx, setQuestionIdx] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isSubmitDialogOpened, setIsSubmitDialogOpened] = useState(false);
+  const [userResponse, setUserResponse] =
+    useState<UserResponse>(initUserResponse);
 
   const question = useMemo(() => {
-    return quiz?.questions[questionIdx];
-  }, [questionIdx, quiz?.questions]);
+    return quiz === null ? null : quiz.questions[questionIdx];
+  }, [questionIdx, quiz]);
+
+  const selectSingleAnswer = useCallback(
+    (questionId: string, answerId: string) => {
+      const answerIds = new Set<AnswerId>();
+      answerIds.add(answerId);
+      userResponse.set(questionId, answerIds);
+      setUserResponse(new Map(userResponse));
+    },
+    [userResponse]
+  );
+
+  const selectMultipleAnswer = useCallback(
+    (questionId: string, answerId: string) => {
+      let answerIds = userResponse.get(questionId);
+      if (answerIds === undefined) {
+        answerIds = new Set<AnswerId>();
+      }
+
+      answerIds.add(answerId);
+      userResponse.set(questionId, answerIds);
+      setUserResponse(new Map(userResponse));
+    },
+    [userResponse]
+  );
+
+  const removeMultipleAnswer = useCallback(
+    (questionId: string, answerId: string) => {
+      const answerIds = userResponse.get(questionId);
+      if (answerIds) {
+        answerIds.delete(answerId);
+        userResponse.set(questionId, answerIds);
+        setUserResponse(new Map(userResponse));
+      }
+    },
+    [userResponse]
+  );
 
   useEffect(() => {
     (async () => {
@@ -93,7 +143,7 @@ export default function Quiz() {
     };
   }, [duration, isLoading, isNotFound]);
 
-  if (isLoading) {
+  if (isLoading || question === null) {
     return (
       <div className="absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 grid place-items-center gap-2">
         <LoadingIndicator variant="bars" className="size-16" />
@@ -160,9 +210,81 @@ export default function Quiz() {
         </header>
 
         <main className="relative flex flex-1 flex-col gap-4 p-6">
-          {question?.content}
+          <div className="flex justify-center gap-4">
+            <div
+              dangerouslySetInnerHTML={{
+                __html: deltaToHTMLString(
+                  JSON.parse(question ? question.content : "")
+                ),
+              }}
+              className="basis-3/5 max-w-3xl rounded-xl border-2 p-3 text-xl [&_img]:h-72 [&_img]:w-72 [&_img]:object-cover [&_img]:object-center [&_ol]:my-4 [&_ol]:ml-8 [&_ol]:flex [&_ol]:list-decimal [&_ol]:flex-col [&_ol]:justify-between [&_ol]:gap-y-0.5 [&_ul]:my-4 [&_ul]:ml-8 [&_ul]:flex [&_ul]:list-disc [&_ul]:flex-col [&_ul]:justify-between [&_ul]:gap-y-0.5"
+            ></div>
 
-          <div className="ml-auto flex items-center gap-4">
+            {question.type === "multiple_choice" ? (
+              <RadioGroup
+                onValueChange={(answerId: string) =>
+                  selectSingleAnswer(question.id, answerId)
+                }
+                className="basis-2/5 flex flex-col gap-6 w-full max-w-md"
+              >
+                {question.answers.map((answer) => {
+                  return (
+                    <Label
+                      key={answer.id}
+                      htmlFor={answer.id}
+                      className="cursor-pointer flex items-center gap-4 border-2 p-4 rounded-md"
+                    >
+                      <RadioGroupItem
+                        value={answer.id}
+                        id={answer.id}
+                        checked={userResponse.get(question.id)?.has(answer.id)}
+                        className="cursor-pointer"
+                      />
+
+                      <div
+                        dangerouslySetInnerHTML={{
+                          __html: deltaToHTMLString(JSON.parse(answer.content)),
+                        }}
+                        className="[&_img]:h-[200px] [&_img]:w-[200px] [&_img]:object-cover [&_img]:object-center"
+                      ></div>
+                    </Label>
+                  );
+                })}
+              </RadioGroup>
+            ) : (
+              <div className="basis-2/5 flex flex-col gap-6 w-full max-w-md">
+                {question.answers.map((answer) => {
+                  return (
+                    <Label
+                      key={answer.id}
+                      htmlFor={answer.id}
+                      className="cursor-pointer flex items-center gap-4 border-2 p-4 rounded-md"
+                    >
+                      <Checkbox
+                        id={answer.id}
+                        checked={userResponse.get(question.id)?.has(answer.id)}
+                        onCheckedChange={(checked) =>
+                          checked
+                            ? selectMultipleAnswer(question.id, answer.id)
+                            : removeMultipleAnswer(question.id, answer.id)
+                        }
+                        className="cursor-pointer"
+                      />
+
+                      <div
+                        dangerouslySetInnerHTML={{
+                          __html: deltaToHTMLString(JSON.parse(answer.content)),
+                        }}
+                        className="[&_img]:h-[200px] [&_img]:w-[200px] [&_img]:object-cover [&_img]:object-center"
+                      ></div>
+                    </Label>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="ml-auto mt-auto flex items-center gap-4">
             <Button
               disabled={questionIdx === 0}
               onClick={() => setQuestionIdx(questionIdx - 1)}
