@@ -125,6 +125,10 @@ export default function History() {
           <Separator orientation="vertical" className="mr-2 h-4" />
           <div className="w-full flex justify-between items-center px-6">
             <h1 className="text-xl font-bold">{history.quiz.name}</h1>
+            <div className="font-bold flex items-center gap-4">
+              <span className="text-lg">Score:</span>{" "}
+              <span className="text-2xl">{history.score}</span>
+            </div>
           </div>
         </header>
 
@@ -224,7 +228,7 @@ export default function History() {
               className="w-full basis-3/5 max-w-3xl"
             >
               <AccordionItem value="solution">
-                <AccordionTrigger className="font-bold">
+                <AccordionTrigger className="font-bold text-lg [&_svg]:size-5">
                   Lihat Pembahasan
                 </AccordionTrigger>
                 <AccordionContent asChild>

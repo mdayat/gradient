@@ -83,13 +83,52 @@ export default async function handler(
       questionsMap.set(item.question.id, question);
     }
 
+    const totalQuestion = questionsMap.size;
+    let totalCorrectQuestion = 0;
+
     const questions: GetHistory["questions"] = [];
-    for (const item of questionsMap.values()) {
+    questionsMapLoop: for (const item of questionsMap.values()) {
       questions.push(item);
+      if (item.selectedAnswerIds.length === 0) {
+        continue;
+      }
+
+      if (item.selectedAnswerIds.length === 1) {
+        for (const answer of item.answers) {
+          if (item.selectedAnswerIds[0] !== answer.id) {
+            continue;
+          }
+
+          if (answer.is_correct) {
+            totalCorrectQuestion++;
+            continue questionsMapLoop;
+          }
+        }
+      }
+
+      if (item.selectedAnswerIds.length > 1) {
+        selectedAnswerIdsLoop: for (const answerId of item.selectedAnswerIds) {
+          for (const answer of item.answers) {
+            if (answerId !== answer.id) {
+              continue;
+            }
+
+            if (answer.is_correct === false) {
+              continue questionsMapLoop;
+            }
+
+            if (answer.is_correct) {
+              continue selectedAnswerIdsLoop;
+            }
+          }
+        }
+        totalCorrectQuestion++;
+      }
     }
 
     res.status(StatusCodes.OK).json({
       id: history.id,
+      score: Math.round((totalCorrectQuestion / totalQuestion) * 100),
       completed_at: history.completed_at.toISOString(),
       quiz: history.quiz,
       questions,

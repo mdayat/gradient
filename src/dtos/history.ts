@@ -7,6 +7,7 @@ interface GetQuizHistories {
 
 interface GetHistory {
   id: string;
+  score: number;
   completed_at: string;
   quiz: {
     id: string;
