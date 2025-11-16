@@ -3,7 +3,7 @@ import { ReasonPhrases, StatusCodes } from "http-status-codes";
 import z from "zod";
 import { prisma } from "@/lib/prisma";
 import { User } from "@/dtos/user";
-import { Prisma } from "../../../../generated/prisma/client";
+import { Prisma } from "@/generated/prisma/client";
 
 export default async function handler(
   req: NextApiRequest,
