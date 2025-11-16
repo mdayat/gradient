@@ -22,4 +22,9 @@ interface GetQuiz {
   }[];
 }
 
-export type { GetQuizzes, GetQuiz };
+interface CreateUserQuizRequest {
+  user_id: string;
+  user_responses: { question_id: string; answer_id: string | null }[];
+}
+
+export type { GetQuizzes, GetQuiz, CreateUserQuizRequest };

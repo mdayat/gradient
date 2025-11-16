@@ -1,10 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { ReasonPhrases, StatusCodes } from "http-status-codes";
-import { User } from "@/dtos/user";
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<User | string>
+  res: NextApiResponse<string>
 ) {
   if (req.method !== "POST") {
     return res

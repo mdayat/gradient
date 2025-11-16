@@ -1,8 +1,8 @@
 import { NotFound } from "@/components/NotFound";
 import { LoadingIndicator } from "@/components/ui/loading-indicator";
-import { GetQuiz } from "@/dtos/quiz";
+import { CreateUserQuizRequest, GetQuiz } from "@/dtos/quiz";
 import { handleAxiosError } from "@/lib/axios";
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
 import { useRouter } from "next/router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -31,6 +31,7 @@ import { deltaToHTMLString } from "@/utils/delta";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useAuthContext } from "@/contexts/AuthProvider";
 
 type QuestionId = string;
 type AnswerId = string;
@@ -44,12 +45,14 @@ export default function Quiz() {
   const [isNotFound, setIsNotFound] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [quiz, setQuiz] = useState<GetQuiz | null>(null);
+
+  const { user } = useAuthContext();
   const router = useRouter();
 
   const [questionIdx, setQuestionIdx] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isSubmitDialogOpened, setIsSubmitDialogOpened] = useState(false);
-  const [userResponse, setUserResponse] =
+  const [userResponses, setUserResponses] =
     useState<UserResponse>(initUserResponse);
 
   const question = useMemo(() => {
@@ -60,37 +63,98 @@ export default function Quiz() {
     (questionId: string, answerId: string) => {
       const answerIds = new Set<AnswerId>();
       answerIds.add(answerId);
-      userResponse.set(questionId, answerIds);
-      setUserResponse(new Map(userResponse));
+      userResponses.set(questionId, answerIds);
+      setUserResponses(new Map(userResponses));
     },
-    [userResponse]
+    [userResponses]
   );
 
   const selectMultipleAnswer = useCallback(
     (questionId: string, answerId: string) => {
-      let answerIds = userResponse.get(questionId);
+      let answerIds = userResponses.get(questionId);
       if (answerIds === undefined) {
         answerIds = new Set<AnswerId>();
       }
 
       answerIds.add(answerId);
-      userResponse.set(questionId, answerIds);
-      setUserResponse(new Map(userResponse));
+      userResponses.set(questionId, answerIds);
+      setUserResponses(new Map(userResponses));
     },
-    [userResponse]
+    [userResponses]
   );
 
   const removeMultipleAnswer = useCallback(
     (questionId: string, answerId: string) => {
-      const answerIds = userResponse.get(questionId);
+      const answerIds = userResponses.get(questionId);
       if (answerIds) {
         answerIds.delete(answerId);
-        userResponse.set(questionId, answerIds);
-        setUserResponse(new Map(userResponse));
+        userResponses.set(questionId, answerIds);
+        setUserResponses(new Map(userResponses));
       }
     },
-    [userResponse]
+    [userResponses]
   );
+
+  const submitQuiz = useCallback(async () => {
+    setIsLoading(true);
+    const body: CreateUserQuizRequest = {
+      user_id: user ? user.id : "",
+      user_responses: [],
+    };
+
+    for (const [questionId, answerIds] of userResponses.entries()) {
+      // user hasn't answer the question
+      if (answerIds.size === 0) {
+        body.user_responses.push({ question_id: questionId, answer_id: null });
+        continue;
+      }
+
+      // question is multiple choice
+      if (answerIds.size === 1) {
+        const answerId = answerIds.values().toArray()[0];
+        body.user_responses.push({
+          question_id: questionId,
+          answer_id: answerId,
+        });
+        continue;
+      }
+
+      // question is multiple answer
+      for (const answerId of answerIds.values()) {
+        body.user_responses.push({
+          question_id: questionId,
+          answer_id: answerId,
+        });
+      }
+    }
+
+    try {
+      const res = await axios.post<
+        string,
+        AxiosResponse<string>,
+        CreateUserQuizRequest
+      >(`/api/quizzes/${quiz ? quiz.id : ""}/histories`, body, {
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (res.status === 201) {
+        router.replace(`/quizzes/${quiz ? quiz.id : ""}/histories`);
+      } else {
+        throw new Error(`unknown status code ${res.status}`);
+      }
+    } catch (error) {
+      handleAxiosError(error, (res) => {
+        if (!res || res.status >= 500) {
+          console.error(new Error("failed to submit quiz", { cause: error }));
+          toast.error("Couldn't submit quiz, please try again", {
+            richColors: true,
+          });
+        }
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [quiz, router, user, userResponses]);
 
   useEffect(() => {
     (async () => {
@@ -160,7 +224,7 @@ export default function Quiz() {
       <Sidebar>
         <SidebarContent className="px-2 py-4">
           <SidebarMenu className="grid grid-cols-5">
-            {quiz?.questions.map((question, index) => (
+            {(quiz ? quiz.questions : []).map((question, index) => (
               <SidebarMenuItem key={question.id}>
                 <SidebarMenuButton
                   isActive={questionIdx === index}
@@ -190,7 +254,7 @@ export default function Quiz() {
           <Separator orientation="vertical" className="mr-2 h-4" />
 
           <div className="w-full flex justify-between items-center px-6">
-            <h1 className="text-xl font-bold">{quiz?.name}</h1>
+            <h1 className="text-xl font-bold">{quiz ? quiz.name : ""}</h1>
             <div className="flex justify-between items-center gap-4">
               <div className="flex flex-col items-center">
                 <span className="w-9 h-9 flex justify-center items-center rounded-sm border">
@@ -237,7 +301,7 @@ export default function Quiz() {
                       <RadioGroupItem
                         value={answer.id}
                         id={answer.id}
-                        checked={userResponse.get(question.id)?.has(answer.id)}
+                        checked={userResponses.get(question.id)?.has(answer.id)}
                         className="cursor-pointer"
                       />
 
@@ -262,7 +326,7 @@ export default function Quiz() {
                     >
                       <Checkbox
                         id={answer.id}
-                        checked={userResponse.get(question.id)?.has(answer.id)}
+                        checked={userResponses.get(question.id)?.has(answer.id)}
                         onCheckedChange={(checked) =>
                           checked
                             ? selectMultipleAnswer(question.id, answer.id)
@@ -294,7 +358,7 @@ export default function Quiz() {
             </Button>
 
             <Button
-              disabled={questionIdx + 1 === quiz?.questions.length}
+              disabled={questionIdx + 1 === (quiz ? quiz.questions : []).length}
               onClick={() => setQuestionIdx(questionIdx + 1)}
               className="w-32 rounded-full"
             >
@@ -331,7 +395,7 @@ export default function Quiz() {
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter>
-                <Button className="w-full">
+                <Button onClick={submitQuiz} className="w-full">
                   <span>{isLoading ? "Submitting..." : "Submit"}</span>
                 </Button>
               </DialogFooter>
