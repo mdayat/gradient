@@ -97,6 +97,14 @@ export default function Quiz() {
 
   const submitQuiz = useCallback(async () => {
     setIsLoading(true);
+    for (const question of quiz ? quiz.questions : []) {
+      let answerIds = userResponses.get(question.id);
+      if (answerIds === undefined) {
+        answerIds = new Set<AnswerId>();
+        userResponses.set(question.id, answerIds);
+      }
+    }
+
     const body: CreateUserQuizRequest = {
       user_id: user ? user.id : "",
       user_responses: [],

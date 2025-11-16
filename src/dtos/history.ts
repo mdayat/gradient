@@ -5,4 +5,26 @@ interface GetQuizHistories {
   histories: { id: string; completed_at: string }[];
 }
 
-export type { GetQuizHistories };
+interface GetHistory {
+  id: string;
+  completed_at: string;
+  quiz: {
+    id: string;
+    name: string;
+    duration_in_sec: number;
+  };
+  questions: {
+    id: string;
+    content: string;
+    solution: string;
+    type: "multiple_choice" | "multiple_answer";
+    selectedAnswerIds: Array<string | null>;
+    answers: {
+      id: string;
+      content: string;
+      is_correct: boolean;
+    }[];
+  }[];
+}
+
+export type { GetQuizHistories, GetHistory };
