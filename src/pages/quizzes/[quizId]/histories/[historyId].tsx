@@ -10,6 +10,7 @@ import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
+  SidebarHeader,
   SidebarInset,
   SidebarMenu,
   SidebarMenuButton,
@@ -24,6 +25,12 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import Link from "next/link";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 export default function History() {
   const [isNotFound, setIsNotFound] = useState(false);
@@ -85,7 +92,11 @@ export default function History() {
   return (
     <SidebarProvider>
       <Sidebar>
-        <SidebarContent className="px-2 py-4">
+        <SidebarHeader className="px-2 py-4">
+          <h2 className="font-bold text-xl">Navigation</h2>
+        </SidebarHeader>
+
+        <SidebarContent className="p-2">
           <SidebarMenu className="grid grid-cols-5">
             {history.questions.map((question, index) => (
               <SidebarMenuItem key={question.id}>
@@ -121,9 +132,7 @@ export default function History() {
           <div className="flex justify-center gap-4">
             <div
               dangerouslySetInnerHTML={{
-                __html: deltaToHTMLString(
-                  JSON.parse(question ? question.content : "")
-                ),
+                __html: deltaToHTMLString(JSON.parse(question.content)),
               }}
               className="basis-3/5 max-w-3xl rounded-xl border-2 p-3 text-xl [&_img]:h-72 [&_img]:w-72 [&_img]:object-cover [&_img]:object-center [&_ol]:my-4 [&_ol]:ml-8 [&_ol]:flex [&_ol]:list-decimal [&_ol]:flex-col [&_ol]:justify-between [&_ol]:gap-y-0.5 [&_ul]:my-4 [&_ul]:ml-8 [&_ul]:flex [&_ul]:list-disc [&_ul]:flex-col [&_ul]:justify-between [&_ul]:gap-y-0.5"
             ></div>
@@ -134,20 +143,27 @@ export default function History() {
                 className="basis-2/5 flex flex-col gap-6 w-full max-w-md"
               >
                 {question.answers.map((answer) => {
+                  let borderColor = "border-muted";
+                  const isSelectedAnswer = !!question.selectedAnswerIds.find(
+                    (answerId) => answerId === answer.id
+                  );
+
+                  if (answer.is_correct) {
+                    borderColor = "border-green-600";
+                  } else if (isSelectedAnswer && answer.is_correct === false) {
+                    borderColor = "border-destructive";
+                  }
+
                   return (
                     <Label
                       key={answer.id}
                       htmlFor={answer.id}
-                      className="cursor-not-allowed flex items-center gap-4 border-2 p-4 rounded-md"
+                      className={`${borderColor} cursor-not-allowed flex items-center gap-4 border-2 p-4 rounded-md`}
                     >
                       <RadioGroupItem
                         value={answer.id}
                         id={answer.id}
-                        checked={
-                          !!question.selectedAnswerIds.find(
-                            (answerId) => answerId === answer.id
-                          )
-                        }
+                        checked={isSelectedAnswer}
                         className="cursor-pointer"
                       />
 
@@ -164,20 +180,27 @@ export default function History() {
             ) : (
               <div className="basis-2/5 flex flex-col gap-6 w-full max-w-md">
                 {question.answers.map((answer) => {
+                  let borderColor = "border-muted";
+                  const isSelectedAnswer = !!question.selectedAnswerIds.find(
+                    (answerId) => answerId === answer.id
+                  );
+
+                  if (answer.is_correct) {
+                    borderColor = "border-green-600";
+                  } else if (isSelectedAnswer && answer.is_correct === false) {
+                    borderColor = "border-destructive";
+                  }
+
                   return (
                     <Label
                       key={answer.id}
                       htmlFor={answer.id}
-                      className="cursor-not-allowed flex items-center gap-4 border-2 p-4 rounded-md"
+                      className={`${borderColor} cursor-not-allowed flex items-center gap-4 border-2 p-4 rounded-md`}
                     >
                       <Checkbox
                         disabled
                         id={answer.id}
-                        checked={
-                          !!question.selectedAnswerIds.find(
-                            (answerId) => answerId === answer.id
-                          )
-                        }
+                        checked={isSelectedAnswer}
                         className="cursor-pointer"
                       />
 
@@ -192,6 +215,30 @@ export default function History() {
                 })}
               </div>
             )}
+          </div>
+
+          <div className="flex justify-center gap-4">
+            <Accordion
+              collapsible
+              type="single"
+              className="w-full basis-3/5 max-w-3xl"
+            >
+              <AccordionItem value="solution">
+                <AccordionTrigger className="font-bold">
+                  Lihat Pembahasan
+                </AccordionTrigger>
+                <AccordionContent asChild>
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: deltaToHTMLString(JSON.parse(question.solution)),
+                    }}
+                    className="rounded-xl border-2 p-3 text-xl [&_img]:h-72 [&_img]:w-72 [&_img]:object-cover [&_img]:object-center [&_ol]:my-4 [&_ol]:ml-8 [&_ol]:flex [&_ol]:list-decimal [&_ol]:flex-col [&_ol]:justify-between [&_ol]:gap-y-0.5 [&_ul]:my-4 [&_ul]:ml-8 [&_ul]:flex [&_ul]:list-disc [&_ul]:flex-col [&_ul]:justify-between [&_ul]:gap-y-0.5"
+                  ></div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+
+            <div className="basis-2/5 flex flex-col gap-6 w-full max-w-md"></div>
           </div>
 
           <div className="ml-auto mt-auto flex items-center gap-4">

@@ -285,9 +285,7 @@ export default function Quiz() {
           <div className="flex justify-center gap-4">
             <div
               dangerouslySetInnerHTML={{
-                __html: deltaToHTMLString(
-                  JSON.parse(question ? question.content : "")
-                ),
+                __html: deltaToHTMLString(JSON.parse(question.content)),
               }}
               className="basis-3/5 max-w-3xl rounded-xl border-2 p-3 text-xl [&_img]:h-72 [&_img]:w-72 [&_img]:object-cover [&_img]:object-center [&_ol]:my-4 [&_ol]:ml-8 [&_ol]:flex [&_ol]:list-decimal [&_ol]:flex-col [&_ol]:justify-between [&_ol]:gap-y-0.5 [&_ul]:my-4 [&_ul]:ml-8 [&_ul]:flex [&_ul]:list-disc [&_ul]:flex-col [&_ul]:justify-between [&_ul]:gap-y-0.5"
             ></div>
