@@ -215,7 +215,7 @@ export default function Quiz() {
     );
   }
 
-  if (isNotFound) {
+  if (isNotFound || quiz === null) {
     return <NotFound />;
   }
 
@@ -224,7 +224,7 @@ export default function Quiz() {
       <Sidebar>
         <SidebarContent className="px-2 py-4">
           <SidebarMenu className="grid grid-cols-5">
-            {(quiz ? quiz.questions : []).map((question, index) => (
+            {quiz.questions.map((question, index) => (
               <SidebarMenuItem key={question.id}>
                 <SidebarMenuButton
                   isActive={questionIdx === index}
@@ -254,7 +254,7 @@ export default function Quiz() {
           <Separator orientation="vertical" className="mr-2 h-4" />
 
           <div className="w-full flex justify-between items-center px-6">
-            <h1 className="text-xl font-bold">{quiz ? quiz.name : ""}</h1>
+            <h1 className="text-xl font-bold">{quiz.name}</h1>
             <div className="flex justify-between items-center gap-4">
               <div className="flex flex-col items-center">
                 <span className="w-9 h-9 flex justify-center items-center rounded-sm border">
@@ -358,7 +358,7 @@ export default function Quiz() {
             </Button>
 
             <Button
-              disabled={questionIdx + 1 === (quiz ? quiz.questions : []).length}
+              disabled={questionIdx + 1 === quiz.questions.length}
               onClick={() => setQuestionIdx(questionIdx + 1)}
               className="w-32 rounded-full"
             >

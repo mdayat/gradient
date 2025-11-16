@@ -69,6 +69,10 @@ function QuizTableAction({ quiz }: QuizTableActionProps) {
         ) : (
           <></>
         )}
+
+        <DropdownMenuItem asChild className="cursor-pointer">
+          <Link href={`/quizzes/${quiz.id}/histories`}>Histories</Link>
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
