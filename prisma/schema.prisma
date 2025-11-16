@@ -19,6 +19,8 @@ model user {
   id       String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   email    String @unique @db.VarChar(255)
   password String @db.VarChar(255)
+
+  quizzes user_quiz[]
 }
 
 model quiz {
@@ -26,14 +28,16 @@ model quiz {
   name            String @db.VarChar(255)
   duration_in_sec Int    @db.Integer
 
+  users     user_quiz[]
   questions quiz_question[]
 }
 
 model quiz_question {
-  quiz_id     String   @db.Uuid
-  question_id String   @db.Uuid
-  quiz        quiz     @relation(fields: [quiz_id], references: [id], onDelete: Cascade)
-  question    question @relation(fields: [question_id], references: [id], onDelete: Cascade)
+  quiz_id     String @db.Uuid
+  question_id String @db.Uuid
+
+  quiz     quiz     @relation(fields: [quiz_id], references: [id], onDelete: Cascade)
+  question question @relation(fields: [question_id], references: [id], onDelete: Cascade)
 
   @@id([quiz_id, question_id])
 }
@@ -44,8 +48,9 @@ model question {
   solution String        @db.Text
   type     question_type
 
-  quizzes quiz_question[]
-  answers answer[]
+  quizzes        quiz_question[]
+  answers        answer[]
+  user_responses user_response[]
 }
 
 model answer {
@@ -55,6 +60,31 @@ model answer {
   is_correct  Boolean @db.Boolean
 
   question question @relation(fields: [question_id], references: [id], onDelete: Cascade)
+
+  user_responses user_response[]
+}
+
+model user_quiz {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id      String   @db.Uuid
+  quiz_id      String   @db.Uuid
+  completed_at DateTime @default(now()) @db.Timestamptz(6)
+
+  user user @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  quiz quiz @relation(fields: [quiz_id], references: [id], onDelete: Cascade)
+
+  user_responses user_response[]
+}
+
+model user_response {
+  id           String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_quiz_id String  @db.Uuid
+  question_id  String  @db.Uuid
+  answer_id    String? @db.Uuid
+
+  user_quiz user_quiz @relation(fields: [user_quiz_id], references: [id], onDelete: Cascade)
+  question  question  @relation(fields: [question_id], references: [id], onDelete: Cascade)
+  answer    answer?   @relation(fields: [answer_id], references: [id], onDelete: Cascade)
 }
 
 enum question_type {
