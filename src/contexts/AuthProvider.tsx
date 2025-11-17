@@ -94,12 +94,19 @@ function AuthProvider({ children }: PropsWithChildren) {
     );
   }
 
-  if (user === null && router.pathname !== "/sign-in") {
+  if (
+    user === null &&
+    router.pathname !== "/sign-in" &&
+    router.pathname !== "/sign-up"
+  ) {
     router.replace("/sign-in");
     return <></>;
   }
 
-  if (user !== null && router.pathname === "/sign-in") {
+  if (
+    user !== null &&
+    (router.pathname === "/sign-in" || router.pathname === "/sign-up")
+  ) {
     router.replace("/");
     return <></>;
   }

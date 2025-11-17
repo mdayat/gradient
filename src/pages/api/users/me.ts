@@ -21,7 +21,6 @@ export default async function handler(
       "Set-Cookie",
       "user_id=; Max-Age=0; Path=/api; SameSite=Strict; HttpOnly; Secure;"
     );
-    console.error(new Error(result.error.message));
     return res.status(StatusCodes.NOT_FOUND).send(ReasonPhrases.NOT_FOUND);
   }
 
